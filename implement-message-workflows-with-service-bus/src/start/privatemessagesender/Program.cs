@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace privatemessagesender
     class Program
     {
 
-        const string ServiceBusConnectionString = "";
+        const string ServiceBusConnectionString = "Endpoint=sb://salesteamapp-250720.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=qL6D9q6Kdih49JT6Y7MyISaLlknpN51wgTgw13DTaQg=";
         const string QueueName = "salesmessages";
         static IQueueClient queueClient;
 
@@ -24,19 +24,21 @@ namespace privatemessagesender
 
         static async Task SendSalesMessageAsync()
         {
-            // Create a Queue Client here
-
-            // Send messages.
+            queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
+            
             try
             {
-                // Create and send a message here
+                string messageBody = $"$10,000 order for bicycle parts from retailer Adventure Works.";
+                var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+                Console.WriteLine($"Sending message: {messageBody}");
+                await queueClient.SendAsync(message);
             }
             catch (Exception exception)
             {
                 Console.WriteLine($"{DateTime.Now} :: Exception: {exception.Message}");
             }
 
-            // Close the connection to the queue here
+            await queueClient.CloseAsync();
         }
     }
 }

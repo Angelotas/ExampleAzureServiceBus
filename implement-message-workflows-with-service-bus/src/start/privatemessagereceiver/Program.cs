@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace privatemessagereceiver
     class Program
     {
 
-        const string ServiceBusConnectionString = "";
+        const string ServiceBusConnectionString = "Endpoint=sb://salesteamapp-250720.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=qL6D9q6Kdih49JT6Y7MyISaLlknpN51wgTgw13DTaQg=";
         const string QueueName = "salesmessages";
         static IQueueClient queueClient;
 
@@ -23,7 +23,8 @@ namespace privatemessagereceiver
         static async Task ReceiveSalesMessageAsync()
         {
 
-            // Create a Queue Client here
+            queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
+
 
             Console.WriteLine("======================================================");
             Console.WriteLine("Press ENTER key to exit after receiving all the messages.");
@@ -33,18 +34,25 @@ namespace privatemessagereceiver
         
             Console.Read();
 
-            // Close the queue here
+            await queueClient.CloseAsync();
 
         }
 
         static void RegisterMessageHandler()
         {
-            throw new NotImplementedException();
+            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+            {
+                MaxConcurrentCalls = 1,
+                AutoComplete = false
+            };
+            queueClient.RegisterMessageHandler(ProcessMessagesAsync, messageHandlerOptions);
+
         }
 
         static async Task ProcessMessagesAsync(Message message, CancellationToken token)
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            await queueClient.CompleteAsync(message.SystemProperties.LockToken);
         }
 
         static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)

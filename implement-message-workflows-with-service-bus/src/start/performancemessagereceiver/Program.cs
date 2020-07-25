@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +8,7 @@ namespace performancemessagereceiver
 {
     class Program
     {
-        const string ServiceBusConnectionString = "";
+        const string ServiceBusConnectionString = "Endpoint=sb://salesteamapp-250720.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=qL6D9q6Kdih49JT6Y7MyISaLlknpN51wgTgw13DTaQg=";
         const string TopicName = "salesperformancemessages";
         const string SubscriptionName = "Americas";
         static ISubscriptionClient subscriptionClient;
@@ -20,7 +20,7 @@ namespace performancemessagereceiver
 
         static async Task MainAsync()
         {
-            // Create a Subscription Client here
+            subscriptionClient = new SubscriptionClient(ServiceBusConnectionString, TopicName, SubscriptionName);
 
             Console.WriteLine("======================================================");
             Console.WriteLine("Press ENTER key to exit after receiving all the messages.");
@@ -31,17 +31,23 @@ namespace performancemessagereceiver
 
             Console.Read();
 
-            // Close the subscription here
+            await subscriptionClient.CloseAsync();
         }
 
         static void RegisterMessageHandler()
         {
-            throw new NotImplementedException();
+            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+            {
+                MaxConcurrentCalls = 1,
+                AutoComplete = false
+            };
+            subscriptionClient.RegisterMessageHandler(ProcessMessagesAsync, messageHandlerOptions);
         }
 
         static async Task ProcessMessagesAsync(Message message, CancellationToken token)
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"Received sale performance message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            await subscriptionClient.CompleteAsync(message.SystemProperties.LockToken);
         }
 
         static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)

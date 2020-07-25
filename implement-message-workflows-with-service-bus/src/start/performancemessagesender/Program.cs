@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +8,7 @@ namespace performancemessagesender
 {
     class Program
     {
-        const string ServiceBusConnectionString = "";
+        const string ServiceBusConnectionString = "Endpoint=sb://salesteamapp-250720.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=qL6D9q6Kdih49JT6Y7MyISaLlknpN51wgTgw13DTaQg=";
         const string TopicName = "salesperformancemessages";
         static ITopicClient topicClient;
 
@@ -25,19 +25,22 @@ namespace performancemessagesender
 
         static async Task SendPerformanceMessageAsync()
         {
-            // Create a Topic Client here
+            topicClient = new TopicClient(ServiceBusConnectionString, TopicName);
 
             // Send messages.
             try
             {
-                // Create and send a message here
+                string messageBody = $"Total sales for Brazil in August: $13m.";
+                var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+                Console.WriteLine($"Sending message: {messageBody}");
+                await topicClient.SendAsync(message);
             }
             catch (Exception exception)
             {
                 Console.WriteLine($"{DateTime.Now} :: Exception: {exception.Message}");
             }
 
-            // Close the connection to the topic here
+            await topicClient.CloseAsync();
         }
     }
 }
